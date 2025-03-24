@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGI Corp - Gas Burner Assembly Guide</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #005c00;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 60vh;
+            position: relative;
+        }
+        .instruction-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid var(--primary-color);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <img src="https://firebasestorage.googleapis.com/v0/b/widecanvas-d0dd4.appspot.com/o/additional-images%2FAGI%20Logo%20%20(simple).png?alt=media&token=7b164a84-34bc-45bc-9840-ff07b28c64f6" 
+                         alt="AGI Corp Logo" 
+                         class="h-8 w-auto">
+                    <span class="ml-2 text-xl font-semibold text-gray-900">AGI Corp</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Gas Burner Assembly Guide</h1>
+        
+        <div class="canvas-container mb-8 rounded-lg shadow-lg overflow-hidden">
+            <div id="3d-model"></div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="instruction-card p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900">5.2 Replacing the Orifices</h2>
+                <ol class="list-decimal pl-5 space-y-4">
+                    <li>Remove all burner grates, burner caps and burner bases.</li>
+                    <li>Remove the natural gas orifices and replace them with LP orifices using a 7 mm socket wrench.</li>
+                    <li class="text-sm text-gray-600">
+                        Tip: For ease of installation, use a small piece of tape and insert it in the socket wrench to prevent the orifice from falling out.
+                    </li>
+                    <li class="font-medium text-red-600">
+                        Important: Make sure that the orifices do not become detached during removal or fastening. They must be properly tightened to ensure that there are no leaks.
+                    </li>
+                </ol>
+            </div>
+
+            <div class="flex flex-col space-y-4">
+                <button id="rotateBtn" class="bg-[#005c00] text-white px-6 py-3 rounded-lg hover:bg-[#004400] transition-colors">
+                    Rotate Model
+                </button>
+                <button id="resetBtn" class="border-2 border-[#005c00] text-[#005c00] px-6 py-3 rounded-lg hover:bg-[#005c00] hover:text-white transition-colors">
+                    Reset View
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let scene, camera, renderer, controls;
+        let burner, burnerBase;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.querySelector('.canvas-container').offsetWidth, 
+                           document.querySelector('.canvas-container').offsetHeight);
+            renderer.setClearColor(0xf3f4f6);
+            document.getElementById('3d-model').appendChild(renderer.domElement);
+
+            // Create stylized burner components
+            burnerBase = new THREE.Group();
+            
+            // Base plate
+            const baseGeometry = new THREE.CylinderGeometry(2, 2, 0.2, 32);
+            const baseMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
+            const base = new THREE.Mesh(baseGeometry, baseMaterial);
+            burnerBase.add(base);
+
+            // Burner ring
+            const ringGeometry = new THREE.TorusGeometry(1.5, 0.2, 16, 32);
+            const ringMaterial = new THREE.MeshPhongMaterial({ color: 0x444444 });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.position.y = 0.5;
+            burnerBase.add(ring);
+
+            scene.add(burnerBase);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+
+            camera.position.z = 5;
+            camera.position.y = 3;
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const container = document.querySelector('.canvas-container');
+            camera.aspect = container.offsetWidth / container.offsetHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+        }
+
+        window.addEventListener('resize', onWindowResize, false);
+
+        document.getElementById('rotateBtn').addEventListener('click', () => {
+            burnerBase.rotation.y += Math.PI / 2;
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            burnerBase.rotation.set(0, 0, 0);
+            camera.position.set(0, 3, 5);
+            controls.reset();
+        });
+
+        init();
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
